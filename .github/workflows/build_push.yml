@@ -87,7 +87,6 @@ jobs:
 
       - name: Upload APKs (${{ matrix.chunk.number }})
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        if: "github.repository == 'keiyoushi/extensions-source'"
         with:
           name: "individual-apks-${{ matrix.chunk.number }}"
           path: |
@@ -105,7 +104,6 @@ jobs:
     # Run whenever there's anything to publish, new/changed builds OR only deletions
     if: >-
       always() &&
-      github.repository == 'keiyoushi/extensions-source' &&
       needs.prepare.result == 'success' &&
       needs.build.result != 'failure' &&
       needs.build.result != 'cancelled' &&
@@ -129,7 +127,7 @@ jobs:
       - name: Checkout repo branch
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          repository: keiyoushi/extensions
+          repository: VulpineLibrary/extensions
           token: ${{ secrets.BOT_PAT }}
           ref: repo
           path: repo
@@ -142,16 +140,16 @@ jobs:
           cd repo
           pip install protobuf
           python ../main/.github/scripts/publish-repo.py "$DELETE"
-          git config --global user.email "156378334+keiyoushi-bot@users.noreply.github.com"
-          git config --global user.name "keiyoushi-bot"
+          git config --global user.email "felixmuinde@users.noreply.github.com"
+          git config --global user.name "felixmuinde"
           git status
           if [ -n "$(git status --porcelain)" ]; then
             git add .
             git commit -m "Update extensions repo"
             git push
-            curl https://purge.jsdelivr.net/gh/keiyoushi/extensions@repo/index.min.json
-            curl https://purge.jsdelivr.net/gh/keiyoushi/extensions@repo/index.json
-            curl https://purge.jsdelivr.net/gh/keiyoushi/extensions@repo/index.pb
+            curl https://purge.jsdelivr.net/gh/VulpineLibrary/extensions@repo/index.min.json
+            curl https://purge.jsdelivr.net/gh/VulpineLibrary/extensions@repo/index.json
+            curl https://purge.jsdelivr.net/gh/VulpineLibrary/extensions@repo/index.pb
           else
             echo "No changes to commit"
           fi
