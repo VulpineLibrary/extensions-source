@@ -134,7 +134,7 @@ abstract class NHentaiNet : GalleryAdults() {
         return gallery.images.pages.mapIndexed { idx, image ->
             Page(
                 index = idx,
-                imageUrl = "https://i.nhentai.net/galleries/${gallery.media_id}/${idx + 1}.${image.t.toExt()}",
+                imageUrl = "https://i.nhentai.net/galleries/${gallery.mediaId}/${idx + 1}.${image.t.toExt()}",
             )
         }
     }
