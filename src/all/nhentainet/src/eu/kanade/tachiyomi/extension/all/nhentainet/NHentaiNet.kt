@@ -32,27 +32,19 @@ abstract class NHentaiNet : GalleryAdults() {
     }
 
     override val supportsLatest = true
-
-    // nhentai.net includes speechless entries under English
     override val supportSpeechless = mangaLang == LANGUAGE_ENGLISH
-
     override val idPrefixUri = "g"
-
     override val basicSearchKey = "q"
-
     override val favoritePath = "favorites"
 
-    // Gallery listing items use .gallery wrapper with a.cover inside
     override fun popularMangaSelector() = ".gallery"
 
     override fun Element.mangaUrl() = selectFirst("a.cover")?.attr("abs:href")
 
     override fun Element.mangaThumbnail() = selectFirst("a.cover img")?.imgAttr()
 
-    // Language is already scoped by the listing URL path; no per-item re-filtering needed
     override fun Element.mangaLang() = mangaLang
 
-    // For "all" there is no /language/X/ path prefix — fall back to a popularity-sorted search
     override fun popularMangaRequest(page: Int): Request = if (mangaLang.isBlank()) {
         val popularFilter = SortOrderFilter(getSortOrderURIs()).apply { state = 0 }
         basicSearchRequest(page, "", FilterList(popularFilter))
@@ -60,30 +52,24 @@ abstract class NHentaiNet : GalleryAdults() {
         super.popularMangaRequest(page)
     }
 
-    override fun loginRequired(document: Document, url: String): Boolean =
-        url.contains("/$favoritePath/") &&
-            document.select("a[href='/login/']:contains(Sign in)").isNotEmpty()
+    override fun loginRequired(document: Document, url: String): Boolean = url.contains("/$favoritePath/") &&
+        document.select("a[href='/login/']:contains(Sign in)").isNotEmpty()
 
-    // nhentai.net tags page uses a.tag with nested .name span (not a.tag_btn)
-    override fun tagsParser(document: Document): List<Genre> =
-        document.select("a.tag").mapNotNull {
-            Genre(
-                it.selectFirst(".name")?.text() ?: return@mapNotNull null,
-                it.attr("href").removeSuffix("/").substringAfterLast('/'),
-            )
+    override fun tagsParser(document: Document): List<Genre> = document.select("a.tag").mapNotNull {
+        Genre(
+            it.selectFirst(".name")?.text() ?: return@mapNotNull null,
+            it.attr("href").removeSuffix("/").substringAfterLast('/'),
+        )
+    }
+
+    override fun Element.getInfo(tag: String): String = select(".tag-container:contains($tag:) a.tag").joinToString {
+        val name = it.selectFirst(".name")?.text() ?: ""
+        if (tag.contains(regexTag)) {
+            genres[name] = it.attr("href").removeSuffix("/").substringAfterLast('/')
         }
+        name
+    }
 
-    // nhentai.net detail page: tags are grouped in .tag-container divs labelled "Tags:", "Artists:", etc.
-    override fun Element.getInfo(tag: String): String =
-        select(".tag-container:contains($tag:) a.tag").joinToString {
-            val name = it.selectFirst(".name")?.text() ?: ""
-            if (tag.contains(regexTag)) {
-                genres[name] = it.attr("href").removeSuffix("/").substringAfterLast('/')
-            }
-            name
-        }
-
-    // nhentai.net detail layout: #cover holds the thumbnail, #info/#tags hold metadata
     override fun mangaDetailsParse(document: Document): SManga {
         val tags = document.selectFirst("#tags")
         return SManga.create().apply {
@@ -103,7 +89,6 @@ abstract class NHentaiNet : GalleryAdults() {
         }
     }
 
-    // nhentai.net uses <time class="published" datetime="ISO-8601"> instead of .uploaded text
     override fun chapterListParse(response: Response): List<SChapter> {
         val document = response.asJsoup()
         return listOf(
@@ -123,7 +108,6 @@ abstract class NHentaiNet : GalleryAdults() {
         )
     }
 
-    // Use the JSON API to avoid parsing nhentai.net's embedded JS image data
     override fun pageListRequest(chapter: SChapter): Request {
         val id = chapter.url.removePrefix("/$idPrefixUri/").removeSuffix("/")
         return GET("$baseUrl/api/gallery/$id", headers)
