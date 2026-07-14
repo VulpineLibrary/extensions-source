@@ -12,8 +12,6 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.util.asJsoup
 import keiyoushi.annotation.Source
-import keiyoushi.lib.randomua.UserAgentType
-import keiyoushi.lib.randomua.setRandomUserAgent
 import keiyoushi.utils.parseAs
 import okhttp3.Request
 import okhttp3.Response
@@ -38,7 +36,7 @@ abstract class NHentaiNet : GalleryAdults() {
 
     override fun headersBuilder() = super.headersBuilder()
         .add("Referer", "$baseUrl/")
-        .setRandomUserAgent(UserAgentType.DESKTOP)
+        .add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36")
 
     override fun getMangaUrl(manga: SManga) = "$baseUrl${manga.url}"
     override val idPrefixUri = "g"
